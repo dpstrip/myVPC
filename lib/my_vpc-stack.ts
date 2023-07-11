@@ -26,7 +26,7 @@ export class MyVpcStack extends cdk.Stack {
       });
       
       /*Create a security groups and there rules*/
-      const webSG = new ec2.SecurityGroup(this, 'myvpc-webaccess',{
+      const webSG = new ec2.SecurityGroup(this, 'davidsmyvpc-webaccess',{
         vpc,
         allowAllOutbound: true,
         description: 'security group for public web access'
@@ -43,7 +43,7 @@ export class MyVpcStack extends cdk.Stack {
         'allow HTTP access from anywhere');
         
          /*Create a security groups and there rules*/
-      const privateSG = new ec2.SecurityGroup(this, 'myvpc-private',{
+      const privateSG = new ec2.SecurityGroup(this, 'davidsmyvpc-private',{
         vpc,
         allowAllOutbound: true,
         description: 'security group for private'
@@ -56,7 +56,7 @@ export class MyVpcStack extends cdk.Stack {
         
       privateSG.connections.allowFrom(
         new ec2.Connections({securityGroups:[webSG]}),
-        ec2.Port.allTcp()
+        ec2.Port.allIcmp()
         );
         
         
