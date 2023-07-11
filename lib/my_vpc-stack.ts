@@ -3,6 +3,8 @@ import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import {readFileSync} from 'fs';
+import * as eks from 'aws-cdk-lib/aws-eks';
+import { KubectlV26Layer } from '@aws-cdk/lambda-layer-kubectl-v26';
 
 export class MyVpcStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -96,5 +98,34 @@ export class MyVpcStack extends cdk.Stack {
           //load in a web server to test with
           const userDataScript = readFileSync('./lib/user-data.sh', 'utf8');
           ec2PublicInstance.addUserData(userDataScript);
+          
+    /* Create eks cluster*/
+      //create role
+        const iamRole = new iam.Role(this, `${id}-iam-eksCluster`,{
+        roleName: `${id}-iam-eksCluster`,
+        assumedBy: new iam.AccountRootPrincipal(),
+        });
+        
+        //create cluster
+        const cluster = new eks.Cluster(this, 'Cluster', {
+            vpc,
+            defaultCapacity: 1,
+            mastersRole: iamRole,
+            placeClusterHandlerInVpc: true,
+            version: eks.KubernetesVersion.V1_23,
+            endpointAccess: eks.EndpointAccess.PRIVATE,
+             vpcSubnets: [{ 
+                subnetType: ec2.SubnetType.PRIVATE_ISOLATED 
+            }],
+            kubectlEnvironment: {
+          // use vpc endpoint, not the global
+                 "AWS_STS_REGIONAL_ENDPOINTS": 'regional'
+             },
+          kubectlLayer: new KubectlV26Layer(this, 'kubectl')
+          });
+
+        const policy = iam.ManagedPolicy.fromAwsManagedPolicyName(
+              'AmazonEC2ContainerRegistryReadOnly');
+        cluster.defaultNodegroup?.role.addManagedPolicy(policy);
       }
 }
