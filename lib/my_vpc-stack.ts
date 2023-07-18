@@ -24,6 +24,10 @@ export class MyVpcStack extends cdk.Stack {
             subnetType: ec2.SubnetType.PUBLIC
            },
           ],
+           gatewayEndpoints:{
+        s3: {service: ec2.GatewayVpcEndpointAwsService.S3}
+        
+      }
       });
       
       /*Create a security groups and there rules*/
@@ -97,4 +101,5 @@ export class MyVpcStack extends cdk.Stack {
 
   }
 }
+
 
